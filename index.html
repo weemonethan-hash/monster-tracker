@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster Tracker</title>
+  <!-- Tailwind CSS for mobile-first UI -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; }
+  </style>
+</head>
+<body class="p-4 max-w-md mx-auto">
+
+  <!-- APP HEADER -->
+  <header class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-3">
+    <h1 class="text-2xl font-black text-lime-500 tracking-wider">MONSTER LOG</h1>
+    <div id="userInfo" class="text-xs text-zinc-400 hidden">Logged in as: <span id="currentUsername" class="font-bold text-white"></span></div>
+  </header>
+
+  <!-- STEP 1: LOGIN / REGISTER VIEW -->
+  <div id="authView" class="space-y-4 bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl">
+    <h2 class="text-lg font-bold text-white">Claim your Username</h2>
+    <p class="text-xs text-zinc-400">Enter a unique name to join the network and track your drinks.</p>
+    <input type="text" id="usernameInput" placeholder="e.g., MonsterKing99" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white focus:outline-none focus:border-lime-500">
+    <button id="loginBtn" class="w-full bg-lime-500 text-black font-bold p-3 rounded-xl hover:bg-lime-400 transition-colors">Enter App</button>
+  </div>
+
+  <!-- MAIN APP CONTENT (Hidden until logged in) -->
+  <div id="mainApp" class="hidden space-y-6">
+    
+    <!-- ADD DRINK SECTION -->
+    <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl space-y-3">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span class="text-lime-500">⚡</span> Log a Monster
+      </h2>
+      <input type="text" id="flavorInput" placeholder="Flavor (e.g., Pipeline Punch, Ultra White)" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white focus:outline-none focus:border-lime-500">
+      
+      <div class="flex items-center gap-2">
+        <label class="w-full bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-xl p-3 text-center cursor-pointer hover:bg-zinc-700 transition-colors block text-sm font-medium">
+          📸 Take/Choose Photo
+          <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+        </label>
+      </div>
+      <div id="photoPreview" class="text-xs text-lime-400 font-semibold hidden">✓ Photo captured! Ready to upload.</div>
+
+      <button id="addDrinkBtn" class="w-full bg-zinc-100 text-black font-bold p-3 rounded-xl hover:bg-white transition-colors">Add to Feed</button>
+    </div>
+
+    <!-- FRIENDS SECTION -->
+    <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-xl space-y-3">
+      <h2 class="text-lg font-bold text-white">Find & Follow Friends</h2>
+      <div class="flex gap-2">
+        <input type="text" id="searchFriendInput" placeholder="Search username..." class="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-lime-500">
+        <button id="addFriendBtn" class="bg-lime-500 text-black font-bold px-4 rounded-xl text-sm">Add</button>
+      </div>
+      <div id="friendsList" class="flex flex-wrap gap-2 pt-2">
+        <!-- Friends badges will spawn here -->
+      </div>
+    </div>
+
+    <!-- RECENT FEED -->
+    <div>
+      <h2 class="text-lg font-bold text-white mb-3">Activity Feed</h2>
+      <div id="feedContainer" class="space-y-4">
+        <!-- Monster drink logs will appear here in real-time -->
+        <p class="text-sm text-zinc-500 italic text-center py-4">No drinks logged yet. Be the first!</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FIREBASE AND APP LOGIC -->
+  <script type="module">
+    // Import modern Firebase v10 SDK modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // --- FREE CLOUDINARY CONFIGURATION ---
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/q3fen1ng/image/upload";
+    const CLOUDINARY_PRESET = "phonesave"; // <-- REMEMBER: Swap this with your actual Unsigned Preset Name from Cloudinary!
+
+    // Your exact Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBE7PJwL40o3oqnh7IAgzjxcnhw6TNJi90",
+      authDomain: "main-227df.firebaseapp.com",
+      databaseURL: "https://main-227df-default-rtdb.firebaseio.com",
+      projectId: "main-227df",
+      storageBucket: "main-227df.firebasestorage.app",
+      messagingSenderId: "591513648296",
+      appId: "1:591513648296:web:2af7778ae742513146969d",
+      measurementId: "G-KPQYXSRXQP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // App state variables
+    let currentUser = null;
+    let myFriends = [];
+
+    // DOM Elements
+    const authView = document.getElementById('authView');
+    const mainApp = document.getElementById('mainApp');
+    const usernameInput = document.getElementById('usernameInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const currentUsername = document.getElementById('currentUsername');
+    const userInfo = document.getElementById('userInfo');
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+    const flavorInput = document.getElementById('flavorInput');
+    const addDrinkBtn = document.getElementById('addDrinkBtn');
+    const searchFriendInput = document.getElementById('searchFriendInput');
+    const addFriendBtn = document.getElementById('addFriendBtn');
+    const friendsList = document.getElementById('friendsList');
+    const feedContainer = document.getElementById('feedContainer');
+
+    // --- AUTO LOGIN CHECK ---
+    const savedUser = localStorage.getItem('monster_tracker_user');
+    if (savedUser) {
+      setupLoggedInUser(savedUser);
+    }
+
+    // Display captured confirmation
+    photoInput.addEventListener('change', () => {
+      if(photoInput.files.length > 0) photoPreview.classList.remove('hidden');
+    });
+
+    // Helper function to transit UI when logged in
+    function setupLoggedInUser(username) {
+      currentUser = username;
+      currentUsername.textContent = username;
+      authView.classList.add('hidden');
+      userInfo.classList.remove('hidden');
+      mainApp.classList.remove('hidden');
+
+      startRealtimeFeed();
+    }
+
+    // 1. LOGIN / USER REGISTRATION
+    loginBtn.addEventListener('click', async () => {
+      const username = usernameInput.value.trim().toLowerCase();
+      if (!username) return alert('Please enter a username');
+
+      const userRef = ref(db, 'users/' + username);
+      const snapshot = await get(userRef);
+
+      if (!snapshot.exists()) {
+        await set(userRef, { username: username, created: Date.now() });
+      }
+
+      // Save to phone storage so it persists
+      localStorage.setItem('monster_tracker_user', username);
+      
+      setupLoggedInUser(username);
+    });
+
+    // 2. SEARCH & ADD FRIENDS
+    addFriendBtn.addEventListener('click', async () => {
+      const friendName = searchFriendInput.value.trim().toLowerCase();
+      if (!friendName || friendName === currentUser) return alert('Invalid username target.');
+
+      const targetRef = ref(db, 'users/' + friendName);
+      const snapshot = await get(targetRef);
+
+      if (!snapshot.exists()) {
+        alert("User could not be found! Make sure they've registered first.");
+        return;
+      }
+
+      if (!myFriends.includes(friendName)) {
+        myFriends.push(friendName);
+        await set(ref(db, `users/${currentUser}/friends/${friendName}`), true);
+        renderFriendsBadges();
+        searchFriendInput.value = '';
+      }
+    });
+
+    function renderFriendsBadges() {
+      friendsList.innerHTML = myFriends.map(f => `
+        <span class="bg-zinc-800 text-zinc-200 text-xs px-3 py-1 rounded-full border border-zinc-700">@${f}</span>
+      `).join('');
+    }
+
+    // 3. UPLOAD PHOTO TO CLOUDINARY (FREE) & LOG TO FIREBASE
+    addDrinkBtn.addEventListener('click', async () => {
+      const flavor = flavorInput.value.trim();
+      const file = photoInput.files[0];
+
+      if (!flavor) return alert('What flavor did you drink?');
+      if (!file) return alert('Please take a quick photo of the can!');
+
+      addDrinkBtn.disabled = true;
+      addDrinkBtn.textContent = "Uploading image...";
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_PRESET);
+
+        const response = await fetch(CLOUDINARY_URL, {
+          method: 'POST',
+          body: formData
+        });
+        const uploadResult = await response.json();
+        
+        if (!uploadResult.secure_url) throw new Error("Image cloud host upload failed.");
+        const freeImageUrl = uploadResult.secure_url;
+
+        // Save entry into global feed
+        const feedRef = ref(db, 'globalFeed');
+        const newLogRef = push(feedRef);
+        await set(newLogRef, {
+          username: currentUser,
+          flavor: flavor,
+          imageUrl: freeImageUrl,
+          timestamp: Date.now()
+        });
+
+        // Reset UI form inputs
+        flavorInput.value = '';
+        photoInput.value = '';
+        photoPreview.classList.add('hidden');
+        alert('Monster logged successfully!');
+
+      } catch (error) {
+        console.error(error);
+        alert('Error logging your drink.');
+      } finally {
+        addDrinkBtn.disabled = false;
+        addDrinkBtn.textContent = "Add to Feed";
+      }
+    });
+
+    // 4. REALTIME DATABASE EVENT LISTENER FEED
+    function startRealtimeFeed() {
+      const feedRef = ref(db, 'globalFeed');
+      onValue(feedRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          feedContainer.innerHTML = `<p class="text-sm text-zinc-500 italic text-center py-4">No drinks logged yet. Be the first!</p>`;
+          return;
+        }
+
+        const data = snapshot.val();
+        const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+
+        feedContainer.innerHTML = logs.map(log => {
+          const date = new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          const isFriend = myFriends.includes(log.username) || log.username === currentUser;
+          const identityBadge = log.username === currentUser ? 'You' : 'Friend';
+          
+          return `
+            <div class="bg-zinc-900 border ${isFriend ? 'border-lime-900/50' : 'border-zinc-800'} p-4 rounded-2xl space-y-3">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold ${isFriend ? 'text-lime-400' : 'text-zinc-300'}">@${log.username} 
+                  <span class="text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 ml-1">${identityBadge}</span>
+                </span>
+                <span class="text-zinc-500">${date}</span>
+              </div>
+              <p class="text-white text-base font-semibold">Crushed an <span class="text-lime-400">${log.flavor}</span></p>
+              <img src="${log.imageUrl}" alt="Monster Can" class="w-full h-48 object-cover rounded-xl border border-zinc-800 bg-zinc-950">
+            </div>
+          `;
+        }).join('');
+      });
+
+      // Load friends list
+      get(ref(db, `users/${currentUser}/friends`)).then((snapshot) => {
+        if (snapshot.exists()) {
+          myFriends = Object.keys(snapshot.val());
+          renderFriendsBadges();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
