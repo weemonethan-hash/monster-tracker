@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monster Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Monster Tracker — Can Log</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
     * {
@@ -193,18 +193,516 @@
       height: 1px;
       background: linear-gradient(90deg, transparent, #22c55e, transparent);
     }
+
+
+    /* ===============================
+       Mobile-first UI polish layer
+       Keeps the app features intact, but makes the layout feel more native on phones.
+       Also provides enough styling for offline previews when Tailwind CDN is unavailable.
+    =============================== */
+    :root {
+      --bg: #070b1d;
+      --panel: rgba(15, 23, 42, 0.78);
+      --panel-strong: rgba(15, 23, 42, 0.96);
+      --panel-border: rgba(148, 163, 184, 0.13);
+      --muted: #94a3b8;
+      --soft: #cbd5e1;
+      --lime: #a3e635;
+      --lime-2: #22c55e;
+      --purple: #c084fc;
+      --blue: #60a5fa;
+      --radius-xl: 22px;
+      --radius-2xl: 28px;
+      --shadow-card: 0 18px 60px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      min-height: 100dvh;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: auto 0 0 0;
+      height: 36vh;
+      background: linear-gradient(to top, rgba(7,11,29,.92), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .grid { display: grid; }
+    .block { display: block; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .relative { position: relative; }
+    .overflow-hidden { overflow: hidden; }
+    .cursor-pointer { cursor: pointer; }
+    .min-h-screen { min-height: 100dvh; }
+
+    header {
+      padding-top: env(safe-area-inset-top);
+      background: rgba(2, 6, 23, .72) !important;
+      backdrop-filter: blur(22px) saturate(1.15);
+      -webkit-backdrop-filter: blur(22px) saturate(1.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,.24);
+    }
+
+    header > div,
+    #authView > div,
+    #mainApp {
+      width: min(100%, 520px);
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: max(18px, env(safe-area-inset-left));
+      padding-right: max(18px, env(safe-area-inset-right));
+    }
+
+    header > div {
+      min-height: 72px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+      gap: 12px;
+    }
+
+    header h1 { letter-spacing: .12em; line-height: .92; }
+    header p { letter-spacing: .15em; }
+    #currentUsername {
+      max-width: 132px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #authView > div {
+      min-height: calc(100dvh - 78px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 26px;
+      padding-top: 34px;
+      padding-bottom: calc(34px + env(safe-area-inset-bottom));
+    }
+
+    #mainApp {
+      padding-top: 18px;
+      padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+
+    #mainApp > *, #authView .space-y-4.bg-gradient-to-br {
+      margin-bottom: 18px;
+    }
+
+    #mainApp > .grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      position: sticky;
+      top: calc(72px + env(safe-area-inset-top));
+      z-index: 30;
+      padding: 10px 0 4px;
+      background: linear-gradient(to bottom, rgba(7,11,29,.96), rgba(7,11,29,.78), transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    #mainApp > .grid > div,
+    #mainApp > .card-hover,
+    #feedContainer > div:not(.text-center),
+    #authView .space-y-4.bg-gradient-to-br {
+      background: linear-gradient(145deg, rgba(15, 23, 42, .92), rgba(2, 6, 23, .88)) !important;
+      border: 1px solid var(--panel-border) !important;
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    #mainApp > .grid > div {
+      border-radius: 20px;
+      padding: 14px 8px;
+    }
+
+    #mainApp > .grid p:first-child {
+      font-size: clamp(1.25rem, 8vw, 2rem);
+      line-height: 1;
+    }
+
+    #mainApp > .grid p:last-child {
+      margin-top: 6px;
+      font-size: 10px;
+      letter-spacing: .09em;
+    }
+
+    #mainApp > .card-hover,
+    #authView .space-y-4.bg-gradient-to-br {
+      border-radius: var(--radius-2xl);
+      padding: 22px;
+    }
+
+    #mainApp h2, #authView h2 {
+      text-wrap: balance;
+    }
+
+    #authView h2 {
+      font-size: clamp(2.15rem, 11vw, 3.4rem);
+      line-height: .98;
+      letter-spacing: -.04em;
+    }
+
+    #authView p { color: var(--muted); }
+
+    label span {
+      color: var(--muted);
+      letter-spacing: .10em;
+    }
+
+    input, textarea, button, label[for], .cursor-pointer {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input, textarea {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 18px !important;
+      background: rgba(15, 23, 42, .72) !important;
+      border: 1px solid rgba(148, 163, 184, .16) !important;
+      color: #fff;
+      font-size: 16px !important; /* prevents iPhone zoom */
+      line-height: 1.35;
+      outline: none;
+      padding: 15px 17px !important;
+      scroll-margin-top: 110px;
+    }
+
+    input::placeholder { color: #64748b; }
+
+    /* Extra breathing room around text boxes */
+    label.block {
+      margin-bottom: 14px;
+    }
+
+    label.block > span:first-child {
+      margin-bottom: 9px !important;
+      padding-left: 4px;
+    }
+
+    .space-y-3 > label.block,
+    .space-y-4 > label.block {
+      padding: 3px 0;
+    }
+
+    #usernameInput,
+    #flavorInput,
+    #searchFriendInput {
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 20px rgba(0,0,0,.12);
+    }
+
+    #mainApp .flex.gap-2:has(#searchFriendInput) {
+      padding: 4px;
+      border-radius: 22px;
+      background: rgba(2, 6, 23, .28);
+      border: 1px solid rgba(148, 163, 184, .08);
+    }
+
+    input:focus, textarea:focus {
+      border-color: rgba(163, 230, 53, .75) !important;
+      box-shadow: 0 0 0 4px rgba(163, 230, 53, .10), 0 18px 44px rgba(34,197,94,.14);
+    }
+
+    button {
+      min-height: 52px;
+      border: none;
+      border-radius: 16px !important;
+      box-shadow: 0 12px 28px rgba(132, 204, 22, .18);
+      letter-spacing: .08em;
+    }
+
+    #addDrinkBtn, #loginBtn {
+      position: sticky;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 20;
+    }
+
+    label.cursor-pointer:has(#photoInput) {
+      min-height: 118px;
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: linear-gradient(145deg, rgba(15,23,42,.66), rgba(2,6,23,.68)) !important;
+    }
+
+    #photoPreview {
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(34,197,94,.10);
+      border: 1px solid rgba(34,197,94,.18);
+    }
+
+    #mainApp .flex.gap-2:has(#searchFriendInput) {
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    #searchFriendInput { min-width: 0; }
+    #addFriendBtn { flex: 0 0 auto; padding-left: 18px !important; padding-right: 18px !important; }
+
+    #friendsList {
+      min-height: 38px;
+      align-items: center;
+    }
+
+    #friendsList span {
+      padding: 8px 11px !important;
+      border-radius: 999px !important;
+      background: rgba(30,41,59,.88) !important;
+      border: 1px solid rgba(148,163,184,.16) !important;
+    }
+
+    #feedContainer { display: grid; gap: 14px; }
+
+    #feedContainer > div:not(.text-center) {
+      border-radius: 24px !important;
+      padding: 14px !important;
+    }
+
+    #feedContainer .avatar {
+      flex: 0 0 42px;
+      box-shadow: 0 8px 20px rgba(34,197,94,.18);
+    }
+
+    #feedContainer img {
+      height: clamp(220px, 62vw, 340px) !important;
+      border-radius: 18px;
+    }
+
+    .status-dot { box-shadow: 0 0 18px rgba(34,197,94,.8); }
+
+    @media (max-width: 390px) {
+      header > div, #authView > div, #mainApp {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      header .text-3xl { font-size: 1.7rem; }
+      header h1 { font-size: 1.35rem; }
+      #userInfo p:first-child { display: none; }
+      #currentUsername { font-size: .9rem; max-width: 92px; }
+
+      #mainApp > .grid { gap: 8px; }
+      #mainApp > .grid > div { padding: 12px 6px; }
+      #mainApp > .card-hover, #authView .space-y-4.bg-gradient-to-br { padding: 17px; }
+    }
+
+    @media (min-width: 700px) {
+      header > div, #authView > div, #mainApp { width: min(100%, 680px); }
+      #mainApp { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+      #mainApp > .grid, #mainApp > div:last-child { grid-column: 1 / -1; }
+      #mainApp > * { margin-bottom: 0; }
+      #addDrinkBtn, #loginBtn { position: relative; bottom: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+
+    /* Final product finish */
+    body {
+      background: #080d19;
+      color: #e7edf4;
+    }
+
+    body::before {
+      background:
+        radial-gradient(circle at 50% -10%, rgba(132, 204, 22, 0.10), transparent 34%),
+        linear-gradient(180deg, rgba(15,23,42,.35), transparent 38%);
+      opacity: .75;
+    }
+
+    body::after { opacity: .55; }
+
+    .gradient-text {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: #b7f34a;
+    }
+
+    button::before { display: none; }
+
+    button {
+      box-shadow: none;
+      font-weight: 800 !important;
+      letter-spacing: .045em;
+    }
+
+    #loginBtn,
+    #addDrinkBtn,
+    #addFriendBtn {
+      background: #b7f34a !important;
+      color: #071018 !important;
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+    }
+
+    #loginBtn:hover,
+    #addDrinkBtn:hover,
+    #addFriendBtn:hover {
+      background: #c7ff5c !important;
+      box-shadow: 0 12px 28px rgba(0,0,0,.28);
+    }
+
+    header {
+      background: rgba(8, 13, 25, .86) !important;
+      border-bottom-color: rgba(148, 163, 184, .10) !important;
+    }
+
+    .header-glow::after {
+      background: rgba(148, 163, 184, .12);
+    }
+
+    #mainApp > .grid > div,
+    #mainApp > .card-hover,
+    #feedContainer > div:not(.text-center),
+    #authView .space-y-4.bg-gradient-to-br {
+      background: rgba(14, 21, 35, .94) !important;
+      border-color: rgba(148, 163, 184, .12) !important;
+      box-shadow: 0 14px 36px rgba(0,0,0,.24);
+    }
+
+    input, textarea {
+      background: #0a1221 !important;
+      border-color: rgba(148, 163, 184, .18) !important;
+      box-shadow: none !important;
+    }
+
+    input:focus, textarea:focus {
+      transform: none;
+      border-color: rgba(183, 243, 74, .7) !important;
+      box-shadow: 0 0 0 3px rgba(183, 243, 74, .11) !important;
+    }
+
+    .card-hover:hover {
+      transform: none;
+      box-shadow: 0 16px 38px rgba(0,0,0,.28);
+    }
+
+    .avatar {
+      background: #b7f34a;
+      border-radius: 14px;
+      color: #071018;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      animation: none;
+      opacity: .8;
+      box-shadow: none;
+    }
+
+    .feed-image:hover { transform: none; }
+
+    #authView .text-6xl,
+    #mainApp .text-2xl,
+    #mainApp .text-4xl {
+      filter: saturate(.9);
+    }
+
+    #mainApp h2,
+    #authView h2,
+    header h1 {
+      letter-spacing: -.02em;
+    }
+
+    header h1 { letter-spacing: .04em; }
+
+    .person-mark {
+      width: 62px;
+      height: 62px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      background: rgba(183, 243, 74, .10);
+      border: 1px solid rgba(183, 243, 74, .18);
+      box-shadow: 0 14px 34px rgba(0,0,0,.20);
+      position: relative;
+    }
+
+    .person-head {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #b7f34a;
+      position: absolute;
+      top: 13px;
+    }
+
+    .person-body {
+      width: 34px;
+      height: 18px;
+      border-radius: 18px 18px 8px 8px;
+      background: #b7f34a;
+      position: absolute;
+      bottom: 13px;
+    }
+
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      display: inline-grid;
+      place-items: center;
+      background: rgba(183, 243, 74, .12);
+      border: 1px solid rgba(183, 243, 74, .18);
+      color: #b7f34a;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .empty-state {
+      border: 1px dashed rgba(148, 163, 184, .14);
+      border-radius: 22px;
+      background: rgba(14, 21, 35, .42);
+    }
+
+    .empty-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      margin: 0 auto 12px;
+      background: rgba(183, 243, 74, .10);
+      border: 1px solid rgba(183, 243, 74, .18);
+    }
   </style>
 </head>
 <body>
   <main class="min-h-screen">
     <!-- APP HEADER -->
     <header class="header-glow sticky top-0 z-40 backdrop-blur-md bg-gradient-to-b from-slate-950/80 to-slate-950/40 border-b border-slate-800">
-      <div class="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
         <div class="flex items-center gap-3">
-          <div class="text-3xl">⚡</div>
           <div>
-            <h1 class="text-2xl font-black tracking-wider gradient-text">MONSTER</h1>
-            <p class="text-[10px] text-slate-500 font-semibold">ENERGY TRACKER</p>
+            <h1 class="text-2xl font-black tracking-wider gradient-text">Monster Tracker</h1>
+            <p class="text-[10px] text-slate-500 font-semibold">CAN LOG & FRIEND FEED</p>
           </div>
         </div>
         <div id="userInfo" class="text-right hidden">
@@ -216,12 +714,15 @@
 
     <!-- STEP 1: LOGIN / REGISTER VIEW -->
     <div id="authView" class="fade-in">
-      <div class="max-w-md mx-auto px-4 py-12 space-y-8">
+      <div class="max-w-lg mx-auto px-4 py-12 space-y-8">
         <!-- Hero section -->
         <div class="space-y-4 text-center">
-          <div class="text-6xl mb-4">👤</div>
-          <h2 class="text-4xl font-black text-white leading-tight">Join the <span class="gradient-text">Energy Collective</span></h2>
-          <p class="text-slate-400 text-sm leading-relaxed">Create your identity and start tracking Monster across the network.</p>
+          <div class="person-mark mb-4" aria-hidden="true">
+            <div class="person-head"></div>
+            <div class="person-body"></div>
+          </div>
+          <h2 class="text-4xl font-black text-white leading-tight">Track your <span class="gradient-text">Monster</span> runs</h2>
+          <p class="text-slate-400 text-sm leading-relaxed">Sign in with a username, log cans, and keep up with friends.</p>
         </div>
 
         <!-- Login card -->
@@ -231,6 +732,9 @@
             <input 
               type="text" 
               id="usernameInput" 
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
               placeholder="Pick your handle..." 
               class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:border-lime-400 focus:bg-slate-800 text-base"
             >
@@ -238,9 +742,10 @@
           
           <button 
             id="loginBtn" 
+            aria-label="Enter Monster Tracker"
             class="w-full bg-gradient-to-r from-lime-400 to-lime-500 text-slate-950 font-black p-4 rounded-xl hover:shadow-lg hover:shadow-lime-500/50 text-base tracking-wider"
           >
-            ENTER NETWORK
+            CONTINUE
           </button>
 
           <p class="text-xs text-slate-500 text-center">
@@ -251,20 +756,20 @@
     </div>
 
     <!-- MAIN APP CONTENT (Hidden until logged in) -->
-    <div id="mainApp" class="hidden max-w-md mx-auto px-4 pb-12 space-y-8 py-8">
+    <div id="mainApp" class="hidden max-w-lg mx-auto px-4 pb-12 space-y-8 py-8">
       
       <!-- QUICK STATS SECTION -->
       <div class="grid grid-cols-3 gap-4">
         <div class="bg-gradient-to-br from-slate-900 to-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
-          <p class="text-2xl font-black gradient-text">0</p>
+          <p id="todayCount" class="text-2xl font-black gradient-text">0</p>
           <p class="text-xs text-slate-400 font-semibold mt-1">TODAY</p>
         </div>
         <div class="bg-gradient-to-br from-slate-900 to-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
-          <p class="text-2xl font-black text-purple-400">0</p>
+          <p id="weekCount" class="text-2xl font-black text-purple-400">0</p>
           <p class="text-xs text-slate-400 font-semibold mt-1">WEEK</p>
         </div>
         <div class="bg-gradient-to-br from-slate-900 to-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
-          <p class="text-2xl font-black text-blue-400">0</p>
+          <p id="totalCount" class="text-2xl font-black text-blue-400">0</p>
           <p class="text-xs text-slate-400 font-semibold mt-1">TOTAL</p>
         </div>
       </div>
@@ -272,7 +777,7 @@
       <!-- LOG DRINK SECTION -->
       <div class="card-hover bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-3xl border border-slate-800 shadow-lg space-y-4">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🥤</span>
+          <span class="section-icon">+</span>
           <h2 class="text-lg font-black text-white">Log a Crush</h2>
         </div>
         
@@ -282,6 +787,7 @@
             <input 
               type="text" 
               id="flavorInput" 
+              autocomplete="off"
               placeholder="e.g., Pipeline Punch, Ultra White..." 
               class="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:border-lime-400 focus:bg-slate-800 text-sm"
             >
@@ -301,6 +807,7 @@
 
           <button 
             id="addDrinkBtn" 
+            aria-label="Add drink to feed"
             class="w-full bg-gradient-to-r from-lime-400 to-lime-500 text-slate-950 font-black p-4 rounded-xl hover:shadow-lg hover:shadow-lime-500/50 text-base tracking-wider"
           >
             ADD TO FEED
@@ -311,19 +818,23 @@
       <!-- FRIENDS SECTION -->
       <div class="card-hover bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-3xl border border-slate-800 shadow-lg space-y-4">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">👥</span>
-          <h2 class="text-lg font-black text-white">Your Squad</h2>
+          <span class="section-icon">@</span>
+          <h2 class="text-lg font-black text-white">Friends</h2>
         </div>
         
         <div class="flex gap-2">
           <input 
             type="text" 
             id="searchFriendInput" 
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
             placeholder="Find a friend..." 
             class="flex-1 bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:border-lime-400 focus:bg-slate-800 text-sm"
           >
           <button 
             id="addFriendBtn" 
+            aria-label="Add friend"
             class="bg-gradient-to-r from-lime-400 to-lime-500 text-slate-950 font-black px-6 rounded-xl hover:shadow-lg hover:shadow-lime-500/50 text-sm tracking-wider"
           >
             ADD
@@ -339,16 +850,16 @@
       <!-- ACTIVITY FEED -->
       <div>
         <div class="flex items-center gap-2 mb-4">
-          <span class="text-2xl">📢</span>
-          <h2 class="text-lg font-black text-white">Live Feed</h2>
+          <span class="section-icon">•</span>
+          <h2 class="text-lg font-black text-white">Feed</h2>
           <span class="status-dot ml-auto"></span>
         </div>
         <div id="feedContainer" class="space-y-4">
           <!-- Monster drink logs will appear here in real-time -->
-          <div class="text-center py-12">
-            <p class="text-4xl mb-2">🎯</p>
+          <div class="text-center py-12 empty-state">
+            <div class="empty-dot"></div>
             <p class="text-sm text-slate-500">No crushes logged yet.</p>
-            <p class="text-xs text-slate-600 mt-1">Be the first to share!</p>
+            <p class="text-xs text-slate-600 mt-1">Be the first to share.</p>
           </div>
         </div>
       </div>
@@ -400,6 +911,9 @@
     const addFriendBtn = document.getElementById('addFriendBtn');
     const friendsList = document.getElementById('friendsList');
     const feedContainer = document.getElementById('feedContainer');
+    const todayCountEl = document.getElementById('todayCount');
+    const weekCountEl = document.getElementById('weekCount');
+    const totalCountEl = document.getElementById('totalCount');
 
     // Auto login check
     const savedUser = localStorage.getItem('monster_tracker_user');
@@ -431,7 +945,7 @@
       if (!username) return alert('Pick a username to join');
 
       loginBtn.classList.add('loading');
-      loginBtn.textContent = 'JOINING...';
+        loginBtn.textContent = 'SIGNING IN...';
 
       try {
         const userRef = ref(db, 'users/' + username);
@@ -448,7 +962,7 @@
         console.error(error);
       } finally {
         loginBtn.classList.remove('loading');
-        loginBtn.textContent = 'ENTER NETWORK';
+        loginBtn.textContent = 'CONTINUE';
       }
     });
 
@@ -538,16 +1052,34 @@
       }
     });
 
+
+
+    function updateQuickStats(logs) {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const mine = logs.filter(log => log.username === currentUser);
+      drinkCount = {
+        today: mine.filter(log => log.timestamp >= startOfToday).length,
+        week: mine.filter(log => log.timestamp >= sevenDaysAgo).length,
+        total: mine.length
+      };
+      todayCountEl.textContent = drinkCount.today;
+      weekCountEl.textContent = drinkCount.week;
+      totalCountEl.textContent = drinkCount.total;
+    }
+
     // REALTIME FEED
     function startRealtimeFeed() {
       const feedRef = ref(db, 'globalFeed');
       onValue(feedRef, (snapshot) => {
         if (!snapshot.exists()) {
+          updateQuickStats([]);
           feedContainer.innerHTML = `
-            <div class="text-center py-12">
-              <p class="text-4xl mb-2">🎯</p>
+            <div class="text-center py-12 empty-state">
+              <div class="empty-dot"></div>
               <p class="text-sm text-slate-500">No crushes logged yet.</p>
-              <p class="text-xs text-slate-600 mt-1">Be the first to share!</p>
+              <p class="text-xs text-slate-600 mt-1">Be the first to share.</p>
             </div>
           `;
           return;
@@ -555,6 +1087,7 @@
 
         const data = snapshot.val();
         const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        updateQuickStats(logs);
 
         feedContainer.innerHTML = logs.map((log, idx) => {
           const date = new Date(log.timestamp);
@@ -582,7 +1115,7 @@
               
               <!-- Content -->
               <div>
-                <p class="text-white font-semibold">Crushed a <span class="text-lime-400 font-black">${log.flavor}</span></p>
+                <p class="text-white font-semibold">Had a <span class="text-lime-400 font-black">${log.flavor}</span></p>
               </div>
 
               <!-- Image -->
